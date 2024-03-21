@@ -9,6 +9,9 @@ public class CalculadoraDistanciasEuclidianas extends JFrame {
     private JTextField dimensionesField;
     private JTextField puntosField;
     private JPanel mainPanel;
+    private double distanciaMinima = Double.MAX_VALUE;
+    private int puntoMinimoA = -1;
+    private int puntoMinimoB = -1;
 
     public CalculadoraDistanciasEuclidianas() {
         setTitle("Calculadora de Distancias Euclidianas");
@@ -123,17 +126,29 @@ public class CalculadoraDistanciasEuclidianas extends JFrame {
         }
     }
     
-    public void mostrarDistancias(double[][] coordenadas) {
-        panelDistancias.add(new JLabel("Distancias Euclidianas:"));
-        for (int i = 0; i < coordenadas.length; i++) {
-            for (int j = i + 1; j < coordenadas.length; j++) {
-                double distancia = distanciaEuclidiana(coordenadas[i], coordenadas[j]);
-                JLabel distanciaLabel = new JLabel("Distancia entre Punto " + (i + 1) + " y Punto " + (j + 1) + ": " + distancia);
-                distanciaLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-                panelDistancias.add(distanciaLabel);
+  public void mostrarDistancias(double[][] coordenadas) {
+    panelDistancias.add(new JLabel("Distancias Euclidianas:"));
+    for (int i = 0; i < coordenadas.length; i++) {
+        for (int j = i + 1; j < coordenadas.length; j++) {
+            double distancia = distanciaEuclidiana(coordenadas[i], coordenadas[j]);
+            JLabel distanciaLabel = new JLabel("Distancia entre Punto " + (i + 1) + " y Punto " + (j + 1) + ": " + distancia);
+            distanciaLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+            panelDistancias.add(distanciaLabel);
+
+            // Verificar si esta distancia es menor que la mínima actual
+            if (distancia < distanciaMinima) {
+                distanciaMinima = distancia;
+                puntoMinimoA = i + 1;
+                puntoMinimoB = j + 1;
             }
         }
     }
+
+    JLabel distanciaMinimaLabel = new JLabel("Distancia mínima entre Punto " + puntoMinimoA + " y Punto " + puntoMinimoB + ": " + distanciaMinima);
+    distanciaMinimaLabel.setFont(new Font("Arial", Font.BOLD, 16));
+    panelDistancias.add(distanciaMinimaLabel);
+}
+
 
     public double[][] generarPuntos(int dimensiones, int puntos) {
         double[][] coordenadas = new double[puntos][dimensiones];
