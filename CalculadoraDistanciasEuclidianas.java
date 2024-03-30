@@ -1,154 +1,156 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.Random;
 
-public class CalculadoraDistanciasEuclidianas extends JFrame {
+public class CalculadoraDistanciasEuclidianas extends JFrame implements ActionListener {
 
-    private JPanel panelPuntos;
-    private JPanel panelDistancias;
     private JTextField dimensionesField;
     private JTextField puntosField;
-    private JPanel mainPanel;
+    private JTextArea resultadoArea;
+    private JTextArea distanciaMinimaArea;
+    private JTextArea coordenadasArea;
+
     private double distanciaMinima = Double.MAX_VALUE;
     private int puntoMinimoA = -1;
     private int puntoMinimoB = -1;
 
+    private JPanel panelGrafico;
+    private double escala = 1.0;
+
     public CalculadoraDistanciasEuclidianas() {
         setTitle("Calculadora de Distancias Euclidianas");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(800, 300);
+        setSize(1000, 600);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(240, 240, 240)); // Color de fondo
+        getContentPane().setBackground(new Color(240, 240, 240));
 
-        JPanel panelEntrada = new JPanel(new GridLayout(2, 1, 10, 20));
+        JPanel panelEntrada = new JPanel(new GridLayout(3, 2, 10, 20));
         panelEntrada.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        panelEntrada.setBackground(new Color(200, 200, 200)); // Color de fondo
+        panelEntrada.setBackground(new Color(200, 200, 200));
 
-        JPanel dimensionesPanel = new JPanel(new GridLayout(2, 1));
-        JLabel dimensionesLabel = new JLabel("Ingresa el tamaño de las dimensiones:");
+        JLabel dimensionesLabel = new JLabel("Tamaño de las dimensiones:");
         dimensionesLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        dimensionesLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        dimensionesLabel.setForeground(Color.WHITE); // Color del texto
         dimensionesField = new JTextField();
         dimensionesField.setFont(new Font("Arial", Font.PLAIN, 16));
-        dimensionesField.setHorizontalAlignment(SwingConstants.CENTER);
-        dimensionesPanel.add(dimensionesLabel);
-        dimensionesPanel.add(dimensionesField);
-        dimensionesPanel.setBackground(new Color(59, 89, 182)); // Color de fondo
 
-        JPanel puntosPanel = new JPanel(new GridLayout(2, 1));
         JLabel puntosLabel = new JLabel("Número de puntos:");
         puntosLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        puntosLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        puntosLabel.setForeground(Color.WHITE); // Color del texto
         puntosField = new JTextField();
         puntosField.setFont(new Font("Arial", Font.PLAIN, 16));
-        puntosField.setHorizontalAlignment(SwingConstants.CENTER);
-        puntosPanel.add(puntosLabel);
-        puntosPanel.add(puntosField);
-        puntosPanel.setBackground(new Color(59, 89, 182)); // Color de fondo
-
-        panelEntrada.add(dimensionesPanel);
-        panelEntrada.add(puntosPanel);
-
-        add(panelEntrada, BorderLayout.NORTH);
 
         JButton calcularButton = new JButton("Calcular");
-        calcularButton.setBackground(new Color(59, 89, 182));
-        calcularButton.setForeground(Color.WHITE);
-        calcularButton.setFocusPainted(false);
-        calcularButton.setFont(new Font("Arial", Font.BOLD, 16));
-        calcularButton.addActionListener(e -> {
-            int dimensiones = Integer.parseInt(dimensionesField.getText());
-            int puntos = Integer.parseInt(puntosField.getText());
-            generarInterfaz(dimensiones, puntos);
-        });
+        calcularButton.addActionListener(this);
+        estilizarBoton(calcularButton);
 
-        JButton graficarButton = new JButton("Graficar"); // Nuevo botón
-        graficarButton.setBackground(new Color(59, 89, 182));
-        graficarButton.setForeground(Color.WHITE);
-        graficarButton.setFocusPainted(false);
-        graficarButton.setFont(new Font("Arial", Font.BOLD, 16));
-        graficarButton.addActionListener(e -> {
-            int dimensiones = Integer.parseInt(dimensionesField.getText());
-            int puntos = Integer.parseInt(puntosField.getText());
-            double[][] coordenadas = generarPuntos(dimensiones, puntos);
-            graficarPuntos(coordenadas);
-        });
+        JButton graficarButton = new JButton("Graficar");
+        graficarButton.addActionListener(this);
+        estilizarBoton(graficarButton);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.add(calcularButton);
-        buttonPanel.add(graficarButton); // Agregar el nuevo botón
-        buttonPanel.setBackground(new Color(200, 200, 200)); // Color de fondo
-        add(buttonPanel, BorderLayout.SOUTH);
+        resultadoArea = new JTextArea();
+        resultadoArea.setEditable(false);
+        resultadoArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        JScrollPane scrollPane = new JScrollPane(resultadoArea);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        distanciaMinimaArea = new JTextArea();
+        distanciaMinimaArea.setEditable(false);
+        distanciaMinimaArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        JScrollPane distanciaScrollPane = new JScrollPane(distanciaMinimaArea);
+        distanciaScrollPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK), "Distancia Mínima"));
+        distanciaScrollPane.setPreferredSize(new Dimension(250, 150));
+
+        coordenadasArea = new JTextArea();
+        coordenadasArea.setEditable(false);
+        coordenadasArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        JScrollPane coordenadasScrollPane = new JScrollPane(coordenadasArea);
+        coordenadasScrollPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK), "Coordenadas"));
+        coordenadasScrollPane.setPreferredSize(new Dimension(250, 150));
+
+        panelEntrada.add(dimensionesLabel);
+        panelEntrada.add(dimensionesField);
+        panelEntrada.add(puntosLabel);
+        panelEntrada.add(puntosField);
+        panelEntrada.add(calcularButton);
+        panelEntrada.add(graficarButton);
+
+        JPanel rightPanel = new JPanel(new GridLayout(2, 1));
+        rightPanel.add(distanciaScrollPane);
+        rightPanel.add(coordenadasScrollPane);
+
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(panelEntrada, BorderLayout.NORTH);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+
+        add(mainPanel);
 
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    public void generarInterfaz(int dimensiones, int puntos) {
-        getContentPane().removeAll();
-        revalidate();
-        repaint();
-
-        panelPuntos = new JPanel();
-        panelPuntos.setLayout(new BoxLayout(panelPuntos, BoxLayout.Y_AXIS));
-
-        panelDistancias = new JPanel();
-        panelDistancias.setLayout(new BoxLayout(panelDistancias, BoxLayout.Y_AXIS));
-
-        double[][] coordenadas = generarPuntos(dimensiones, puntos);
-
-        mostrarPuntos(coordenadas);
-        mostrarDistancias(coordenadas);
-
-        JScrollPane scrollPanePuntos = new JScrollPane(panelPuntos);
-        JScrollPane scrollPaneDistancias = new JScrollPane(panelDistancias);
-
-        mainPanel = new JPanel(new GridLayout(1, 2));
-        mainPanel.add(scrollPanePuntos);
-        mainPanel.add(scrollPaneDistancias);
-
-        add(mainPanel);
-        pack();
+    private void estilizarBoton(JButton boton) {
+        boton.setBackground(new Color(59, 89, 182));
+        boton.setForeground(Color.WHITE);
+        boton.setFocusPainted(false);
+        boton.setFont(new Font("Arial", Font.BOLD, 16));
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
     }
 
-    public void mostrarPuntos(double[][] coordenadas) {
-        panelPuntos.add(new JLabel("Coordenadas de los puntos:"));
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getActionCommand().equals("Calcular")) {
+            calcularDistancias();
+        } else if (e.getActionCommand().equals("Graficar")) {
+            graficarPuntos();
+        }
+    }
+
+    public void calcularDistancias() {
+        try {
+            int dimensiones = Integer.parseInt(dimensionesField.getText());
+            int puntos = Integer.parseInt(puntosField.getText());
+            double[][] coordenadas = generarPuntos(dimensiones, puntos);
+            mostrarDistancias(coordenadas);
+            mostrarCoordenadas(coordenadas);
+            mostrarDistanciaMinima();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Ingrese números válidos en los campos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void mostrarDistancias(double[][] coordenadas) {
+        StringBuilder resultado = new StringBuilder("Distancias Euclidianas:\n");
         for (int i = 0; i < coordenadas.length; i++) {
-            StringBuilder puntoStr = new StringBuilder("Punto " + (i + 1) + ": ");
-            for (int j = 0; j < coordenadas[0].length; j++) {
-                puntoStr.append("{x: ").append(coordenadas[i][j]).append(", y: ").append(coordenadas[i][j]).append("} ");
-            }
-            JLabel puntoLabel = new JLabel(puntoStr.toString());
-            puntoLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-            panelPuntos.add(puntoLabel);
-        }
-    }
-    
-  public void mostrarDistancias(double[][] coordenadas) {
-    panelDistancias.add(new JLabel("Distancias Euclidianas:"));
-    for (int i = 0; i < coordenadas.length; i++) {
-        for (int j = i + 1; j < coordenadas.length; j++) {
-            double distancia = distanciaEuclidiana(coordenadas[i], coordenadas[j]);
-            JLabel distanciaLabel = new JLabel("Distancia entre Punto " + (i + 1) + " y Punto " + (j + 1) + ": " + distancia);
-            distanciaLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-            panelDistancias.add(distanciaLabel);
-
-            // Verificar si esta distancia es menor que la mínima actual
-            if (distancia < distanciaMinima) {
-                distanciaMinima = distancia;
-                puntoMinimoA = i + 1;
-                puntoMinimoB = j + 1;
+            for (int j = i + 1; j < coordenadas.length; j++) {
+                double distancia = distanciaEuclidiana(coordenadas[i], coordenadas[j]);
+                resultado.append("Distancia entre Punto ").append(i + 1).append(" y Punto ").append(j + 1).append(": ").append(distancia).append("\n");
             }
         }
+        resultadoArea.setText(resultado.toString());
+        resultadoArea.setCaretPosition(0); // Mover el scroll al inicio
     }
 
-    JLabel distanciaMinimaLabel = new JLabel("Distancia mínima entre Punto " + puntoMinimoA + " y Punto " + puntoMinimoB + ": " + distanciaMinima);
-    distanciaMinimaLabel.setFont(new Font("Arial", Font.BOLD, 16));
-    panelDistancias.add(distanciaMinimaLabel);
-}
+    public void mostrarCoordenadas(double[][] coordenadas) {
+        StringBuilder coordenadasStr = new StringBuilder("Coordenadas de los puntos:\n");
+        for (int i = 0; i < coordenadas.length; i++) {
+            coordenadasStr.append("Punto ").append(i + 1).append(": ");
+            for (int j = 0; j < coordenadas[i].length; j++) {
+                coordenadasStr.append(coordenadas[i][j]);
+                if (j < coordenadas[i].length - 1) {
+                    coordenadasStr.append(", ");
+                }
+            }
+            coordenadasStr.append("\n");
+        }
+        coordenadasArea.setText(coordenadasStr.toString());
+        coordenadasArea.setCaretPosition(0); // Mover el scroll al inicio
+    }
 
+    public void mostrarDistanciaMinima() {
+        distanciaMinimaArea.setText("Distancia mínima entre Punto " + puntoMinimoA + " y Punto " + puntoMinimoB + ": " + distanciaMinima);
+
+    }
 
     public double[][] generarPuntos(int dimensiones, int puntos) {
         double[][] coordenadas = new double[puntos][dimensiones];
@@ -168,47 +170,78 @@ public class CalculadoraDistanciasEuclidianas extends JFrame {
         for (int i = 0; i < punto1.length; i++) {
             sumaCuadrados += Math.pow(punto1[i] - punto2[i], 2);
         }
-        return Math.sqrt(sumaCuadrados);
+        double distancia = Math.sqrt(sumaCuadrados);
+
+        // Verificar si esta distancia es menor que la mínima actual
+        if (distancia < distanciaMinima) {
+            distanciaMinima = distancia;
+            puntoMinimoA = (int) punto1[0] + 1; // El índice del punto se toma desde 0
+            puntoMinimoB = (int) punto2[0] + 1; // Se suma 1 para mostrar el número real de punto
+        }
+
+        return distancia;
     }
 
-    public void graficarPuntos(double[][] coordenadas) {
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(500, 500);
-        frame.setLocationRelativeTo(null);
+        public void graficarPuntos() {
+        try {
+            int dimensiones = Integer.parseInt(dimensionesField.getText());
+            int puntos = Integer.parseInt(puntosField.getText());
+            double[][] coordenadas = generarPuntos(dimensiones, puntos);
 
-        JPanel panel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
+            JFrame frame = new JFrame("Gráfico de Puntos");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(800, 600);
+            frame.setLocationRelativeTo(null);
 
-                // Dibujar eje X
-                g2d.drawLine(50, getHeight() / 2, getWidth() - 50, getHeight() / 2);
-                g2d.drawString("X", getWidth() - 20, getHeight() / 2 - 10);
+            panelGrafico = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2d = (Graphics2D) g;
 
-                // Dibujar eje Y
-                g2d.drawLine(getWidth() / 2, 50, getWidth() / 2, getHeight() - 50);
-                g2d.drawString("Y", getWidth() / 2 + 10, 20);
+                    // Dibujar la cuadrícula
+                    g2d.setColor(Color.LIGHT_GRAY);
+                    int gridSpacing = 50;
+                    for (int i = 0; i <= getWidth(); i += gridSpacing) {
+                        g2d.drawLine(i, 0, i, getHeight());
+                    }
+                    for (int j = 0; j <= getHeight(); j += gridSpacing) {
+                        g2d.drawLine(0, j, getWidth(), j);
+                    }
 
-                // Dibujar los puntos
-                for (double[] punto : coordenadas) {
-                    int x = (int) punto[0];
-                    int y = (int) punto[1];
-                    // Ajustar los puntos al plano
-                    int xReal = getWidth() / 2 + x;
-                    int yReal = getHeight() / 2 - y;
-                    g2d.setColor(new Color(255, 0, 0)); // Color de los puntos
-                    g2d.fillOval(xReal - 3, yReal - 3, 6, 6); // Dibujar un círculo para cada punto
+                    // Dibujar los ejes X e Y
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawLine(0, getHeight() / 2, getWidth(), getHeight() / 2); // Eje X
+                    g2d.drawLine(getWidth() / 2, 0, getWidth() / 2, getHeight()); // Eje Y
+
+                    // Etiquetas de los puntos
+                    g2d.setColor(Color.BLUE);
+                    for (int i = 0; i < coordenadas.length; i++) {
+                        int x = (int) coordenadas[i][0];
+                        int y = (int) coordenadas[i][1];
+                        int xReal = getWidth() / 2 + (int) (x * escala);
+                        int yReal = getHeight() / 2 - (int) (y * escala);
+                        g2d.fillOval(xReal - 3, yReal - 3, 6, 6); // Punto
+                        g2d.drawString("P" + (i + 1), xReal + 5, yReal - 5); // Etiqueta del punto
+                    }
                 }
-            }
-        };
+            };
 
-        frame.add(panel);
-        frame.setVisible(true);
+            // Habilitar scroll para zoom
+            JScrollPane scrollPane = new JScrollPane(panelGrafico);
+            scrollPane.setPreferredSize(new Dimension(600, 400));
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Ajuste de la velocidad de scroll
+
+            frame.add(scrollPane);
+            frame.setVisible(true);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Ingrese números válidos en los campos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(CalculadoraDistanciasEuclidianas::new);
+
+  public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new CalculadoraDistanciasEuclidianas());
     }
 }
+
